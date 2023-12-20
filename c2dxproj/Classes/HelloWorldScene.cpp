@@ -25,11 +25,18 @@
 #include "HelloWorldScene.h"
 
 #include <unistd.h>
+#include <limits>
 #include <memory>
 #include <string>
 #include <stdexcept>
 
 USING_NS_CC;
+
+HelloWorld::~HelloWorld() {
+    mpz_clear(m_numAbsValue);
+    mpz_clear(m_numDenominator);
+    mpz_clear(m_numCurrentValue);
+}
 
 Scene* HelloWorld::createScene()
 {
@@ -90,9 +97,14 @@ bool HelloWorld::init()
     // add a label shows "Hello World"
     // create and initialize a label
 
+    // https://machinecognitis.github.io/Math.Gmp.Native/html/89d8c501-6c12-9104-7e2d-be411f443b62.htm
+    mpz_init(m_numCurrentValue);
+    mpz_init(m_numDenominator);
+    mpz_init(m_numAbsValue);
+
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
-    std::snprintf(buffer, sizeof(buffer), "Init TID %d", gettid());
+    std::snprintf(buffer, sizeof(buffer), "Init TID %d %d", gettid(), std::numeric_limits<double>::digits10);
     m_pLabelInitTid = Label::createWithTTF(buffer, "fonts/Marker Felt.ttf", 24);
     if (m_pLabelInitTid == nullptr)
     {
@@ -168,23 +180,29 @@ double HelloWorld::calculateCurrentFraction(int iteration)
     if ( (iteration % 2) == 0 ) {
         return absValue;
     }
-    CCLOG("calculateCurrentFraction %d %Lf", iteration, absValue);
+//    CCLOG("calculateCurrentFraction %d %Lf", iteration, absValue);
+    // CCLOG("calculateCurrentFraction %d %0.15f", iteration, absValue);
     return -absValue;
 }
 
 void HelloWorld::update(float f)
 {
     double currentFraction = 0.0;
-    for ( int i = 0; i < 100000; i++ ) {
+    int iteration = 1000;
+    for ( int i = 0; i < iteration; i++ ) {
+        for ( int j = 0; j < iteration; j++ ) {
+            currentFraction = calculateCurrentFraction(j);
+        }
         currentFraction = calculateCurrentFraction(m_iIteration);
         m_dCurrentValue += currentFraction;
         m_iIteration++;
     }
-    CCLOG("HelloWorld update currentValue: %Lf", m_dCurrentValue);
+    // CCLOG("HelloWorld update currentValue: %Lf", m_dCurrentValue);
+    CCLOG("HelloWorld update currentValue: %0.15f", m_dCurrentValue);
 
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
-    std::snprintf(buffer, sizeof(buffer), "Update TID %d %f", gettid(), m_dCurrentValue);
+    std::snprintf(buffer, sizeof(buffer), "Update TID %d %0.15f", gettid(), m_dCurrentValue);
     m_sCurrentText = buffer;
     // CCLOG("The current tid: %d text: %s", gettid(), m_sCurrentText.c_str());
     m_pLabelUpdateTid->setString(m_sCurrentText);
