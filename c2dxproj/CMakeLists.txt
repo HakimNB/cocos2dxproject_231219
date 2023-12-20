@@ -46,6 +46,8 @@ endif()
 # record sources, headers, resources...
 set(GAME_SOURCE)
 set(GAME_HEADER)
+set(GMP_SOURCE)
+set(GMP_HEADER)
 
 set(GAME_RES_FOLDER
     "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
@@ -62,6 +64,15 @@ list(APPEND GAME_SOURCE
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/HelloWorldScene.h
+     )
+
+list(APPEND GMP_SOURCE
+     Classes/gmp/mini-gmp.c
+     Classes/gmp/mini-mpq.c
+     )
+list(APPEND GMP_HEADER
+     Classes/gmp/mini-gmp.h
+     Classes/gmp/mini-mpq.h
      )
 
 if(ANDROID)
@@ -120,6 +131,8 @@ endif()
 set(all_code_files
     ${GAME_HEADER}
     ${GAME_SOURCE}
+    ${GMP_HEADER}
+    ${GMP_SOURCE}
     )
 if(NOT ANDROID)
     add_executable(${APP_NAME} ${all_code_files})
