@@ -164,11 +164,11 @@ bool HelloWorld::init()
 double HelloWorld::calculateCurrentFraction(int iteration)
 {
     int denominator = (2 * iteration) + 1;
-    double absValue = 4.0f / denominator;
+    double absValue = ((double)4.0) / ((double)denominator);
     if ( (iteration % 2) == 0 ) {
         return absValue;
     }
-    CCLOG("calculateCurrentFraction %d %f", iteration, absValue);
+    CCLOG("calculateCurrentFraction %d %Lf", iteration, absValue);
     return -absValue;
 }
 
@@ -180,7 +180,7 @@ void HelloWorld::update(float f)
         m_dCurrentValue += currentFraction;
         m_iIteration++;
     }
-    CCLOG("HelloWorld update currentValue: %f", m_dCurrentValue);
+    CCLOG("HelloWorld update currentValue: %Lf", m_dCurrentValue);
 
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
