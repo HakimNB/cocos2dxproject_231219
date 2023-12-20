@@ -25,6 +25,7 @@ THE SOFTWARE.
 package org.cocos2dx.lib;
 
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -57,6 +58,7 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
     // ===========================================================
 
     public static void setAnimationInterval(float interval) {
+        Log.d("Cocos2dxRenderer", "Cocos2dxRenderer.setAnimationInterval: " + interval);
         sAnimationInterval = (long) (interval * Cocos2dxRenderer.NANOSECONDSPERSECOND);
     }
 
@@ -89,16 +91,21 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
          */
 
         if (Cocos2dxRenderer.sAnimationInterval <= 1.0f / 60f * Cocos2dxRenderer.NANOSECONDSPERSECOND) {
+            // Log.d("Cocos2dxRenderer", "onDrawFrame nativeRender : " + Cocos2dxRenderer.sAnimationInterval); // 16666668
             Cocos2dxRenderer.nativeRender();
         } else {
             final long now = System.nanoTime();
             final long interval = now - this.mLastTickInNanoSeconds;
-        
+
+            
             if (interval < Cocos2dxRenderer.sAnimationInterval) {
+                Log.d("Cocos2dxRenderer", "onDrawFrame interval: " + interval + " < sAnimationInterval: " + Cocos2dxRenderer.sAnimationInterval);
                 try {
                     Thread.sleep((Cocos2dxRenderer.sAnimationInterval - interval) / Cocos2dxRenderer.NANOSECONDSPERMICROSECOND);
                 } catch (final Exception e) {
                 }
+            } else {
+                Log.d("Cocos2dxRenderer", "onDrawFrame NOT! interval: " + interval + " < sAnimationInterval: " + Cocos2dxRenderer.sAnimationInterval);
             }
             /*
              * Render time MUST be counted in, or the FPS will slower than appointed.
