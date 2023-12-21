@@ -15,9 +15,8 @@
  */
 
 #include "adpf_manager.h"
-#include "platform/BasePlatform.h"
 
-#if CC_PLATFORM == CC_PLATFORM_ANDROID && __ANDROID_API__ >= 30
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID && __ANDROID_API__ >= 30
 
     #include <algorithm>
     #include <unistd.h>
@@ -26,10 +25,12 @@
     #include <cstdlib>
     #include <cstring>
     #include <sstream>
-    #include "java/jni/JniHelper.h"
+    #include "platform/android/jni/JniHelper.h"
 
     #define ALOGI(...)
     #define ALOGE(...)
+
+std::chrono::seconds ADPFManager::kThermalHeadroomUpdateThreshold = std::chrono::seconds(1);
 
 // Invoke the method periodically (once a frame) to monitor
 // the device's thermal throttling status.
@@ -41,7 +42,7 @@ void ADPFManager::Monitor() {
     //    if (current_clock - last_clock_ >= kThermalHeadroomUpdateThreshold) {
     if (past > kThermalHeadroomUpdateThreshold) {
         // Update thermal headroom.
-        //        CC_LOG_INFO(" Monitor past %d ms", static_cast<int>(pastMS));
+        //        CCLOG(" Monitor past %d ms", static_cast<int>(pastMS));
         UpdateThermalStatusHeadRoom();
         last_clock_ = currentClock;
     }
@@ -65,22 +66,22 @@ void ADPFManager::Initialize() {
     // Initialize PowerHintManager reference.
     InitializePerformanceHintManager();
 
-    beforeTick.bind([&]() {
-        this->BeginPerfHintSession();
-        this->Monitor();
-    });
+    // beforeTick.bind([&]() {
+    //     this->BeginPerfHintSession();
+    //     this->Monitor();
+    // });
 
-    afterTick.bind([&]() {
-        auto fps = cc::BasePlatform::getPlatform()->getFps();
-        auto frameDurationNS = 1000000000LL / fps;
-        this->EndPerfHintSession(frameDurationNS);
-    });
+    // afterTick.bind([&]() {
+    //     auto fps = cc::BasePlatform::getPlatform()->getFps();
+    //     auto frameDurationNS = 1000000000LL / fps;
+    //     this->EndPerfHintSession(frameDurationNS);
+    // });
 
     if (thermal_manager_) {
         auto ret = AThermal_registerThermalStatusListener(
             thermal_manager_, +[](void *data, AThermalStatus status) {
                 ADPFManager::getInstance().SetThermalStatus(status);
-                CC_LOG_INFO("Thermal Status :%d", static_cast<int>(status));
+                CCLOG("Thermal Status :%d", static_cast<int>(status));
             },
             nullptr);
         ALOGI("Thermal Status callback registerred to:%d", ret);
@@ -97,8 +98,8 @@ bool ADPFManager::InitializePowerManager() {
     }
     #endif
 
-    JNIEnv *env = cc::JniHelper::getEnv();
-    auto *javaGameActivity = cc::JniHelper::getActivity();
+    JNIEnv *env = cocos2d::JniHelper::getEnv();
+    auto *javaGameActivity = cocos2d::JniHelper::getActivity();
 
     // Retrieve class information
     jclass context = env->FindClass("android/content/Context");
@@ -152,7 +153,7 @@ float ADPFManager::UpdateThermalStatusHeadRoom() {
     if (get_thermal_headroom_ == 0) {
         return 0.f;
     }
-    JNIEnv *env = cc::JniHelper::getEnv();
+    JNIEnv *env = cocos2d::JniHelper::getEnv();
 
     // Get thermal headroom!
     thermal_headroom_ =
@@ -180,10 +181,11 @@ bool ADPFManager::InitializePerformanceHintManager() {
         tids[0] = tid;
         hint_session_ = APerformanceHint_createSession(hint_manager_, tids, 1, last_target_);
     }
+    CCLOG("ADPFManager::InitializePerformanceHintManager API >= 33 threadId: %ld gettid: %d getpid: %ld", std::this_thread::get_id(), gettid(), getpid());
     return true;
 #else
-    JNIEnv *env = cc::JniHelper::getEnv();
-    auto *javaGameActivity = cc::JniHelper::getActivity();
+    JNIEnv *env = cocos2d::JniHelper::getEnv();
+    auto *javaGameActivity = cocos2d::JniHelper::getActivity();
 
     // Retrieve class information
     jclass context = env->FindClass("android/content/Context");
@@ -221,9 +223,9 @@ bool ADPFManager::InitializePerformanceHintManager() {
     jobject obj_hintsession = env->CallObjectMethod(
         obj_perfhint_service_, create_hint_session_, array, DEFAULT_TARGET_NS);
     jboolean check = env->ExceptionCheck();
-    CC_LOG_DEBUG("ADPFManager::InitializePerformanceHintManager threadId: %ld gettid: %d getpid: %ld  %d %x", std::this_thread::get_id(), gettid(), getpid(), check, obj_hintsession);
+    CCLOG("ADPFManager::InitializePerformanceHintManager threadId: %ld gettid: %d getpid: %ld  %d %x", std::this_thread::get_id(), gettid(), getpid(), check, obj_hintsession);
     if (obj_hintsession == nullptr) {
-        CC_LOG_DEBUG("Failed First to create a perf hint session.");
+        CCLOG("Failed First to create a perf hint session.");
     } else {
         obj_perfhint_session_ = env->NewGlobalRef(obj_hintsession);
         preferred_update_rate_ =
@@ -296,7 +298,7 @@ void ADPFManager::EndPerfHintSession(jlong target_duration_ns) {
     auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(perf_end - perf_start_).count();
     jlong actual_duration_ns = static_cast<jlong>(dur);
     if (obj_perfhint_session_) {
-        auto *env = cc::JniHelper::getEnv();
+        auto *env = cocos2d::JniHelper::getEnv();
 
         // Report and update the target work duration using JNI calls.
         env->CallVoidMethod(obj_perfhint_session_, report_actual_work_duration_,
@@ -325,7 +327,7 @@ void ADPFManager::registerThreadIdsToHintSession() {
     auto data = thread_ids_.data();
     std::size_t size = thread_ids_.size();
     int result = APerformanceHint_setThreads(hint_session_, data, size);
-    CC_LOG_INFO("ADPFManager::registerThreadIdsToHintSession result: %d", result);
+    CCLOG("ADPFManager::registerThreadIdsToHintSession result: %d", result);
 #elif __ANDROID_API__ >= 33
     auto data = thread_ids_.data();
     std::size_t size = thread_ids_.size();
@@ -334,9 +336,9 @@ void ADPFManager::registerThreadIdsToHintSession() {
         APerformanceHint_closeSession(hint_session_);
     }
     hint_session_ = APerformanceHint_createSession(hint_manager_, data, size, last_target_);
-    CC_LOG_INFO("ADPFManager::registerThreadIdsToHintSession result: %d newHint: %x", result, hint_session_);
+    CCLOG("ADPFManager::registerThreadIdsToHintSession result: %d newHint: %x", result, hint_session_);
 #else
-    JNIEnv *env = cc::JniHelper::getEnv();
+    JNIEnv *env = cocos2d::JniHelper::getEnv();
     std::size_t size = thread_ids_.size();
     jintArray array = env->NewIntArray(size);
     auto data = thread_ids_.data();

@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <jni.h>
 #include <cstring>
 
+#include "platform/android/adpf_manager.h"
+
 #define  LOG_TAG    "CCApplication_android Debug"
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 
@@ -68,6 +70,21 @@ int Application::run()
     {
         return 0;
     }
+
+#if CC_TARGET_PLATFORM
+    CCLOG("CCApplication-android CC_TARGET_PLATFORM %d", CC_TARGET_PLATFORM);
+#endif
+
+#if CC_PLATFORM_ANDROID
+    CCLOG("CCApplication-android CC_PLATFORM_ANDROID");
+#endif
+
+#if CC_SUPPORT_ADPF
+    ADPFManager::getInstance().Initialize();
+    CCLOG("CCApplication-android CC_SUPPORT_ADPF");
+#else
+    CCLOG("CCApplication-android CC_SUPPORT_ADPF is FALSE");
+#endif
 
     return -1;
 }

@@ -17,7 +17,7 @@
 #ifndef ADPF_MANAGER_H_
 #define ADPF_MANAGER_H_
 
-#if CC_PLATFORM == CC_PLATFORM_ANDROID && __ANDROID_API__ >= 30
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID && __ANDROID_API__ >= 30
     #include <android/api-level.h>
     #include <android/log.h>
     #include <android/thermal.h>
@@ -30,9 +30,7 @@
     #include <chrono>
     #include <memory>
     #include <thread>
-    #include "3d/models/SkinningModel.h"
-    #include "engine/EngineEvents.h"
-    #include "platform/java/jni/JniHelper.h"
+    #include "platform/android/jni/JniHelper.h"
 
 // Forward declarations of functions that need to be in C decl.
 
@@ -52,7 +50,7 @@ public:
     // Dtor.
     ~ADPFManager() {
         // Remove global reference.
-        auto env = cc::JniHelper::getEnv();
+        auto env = cocos2d::JniHelper::getEnv();
         if (env != nullptr) {
             if (obj_power_service_ != nullptr) {
                 env->DeleteGlobalRef(obj_power_service_);
@@ -118,7 +116,7 @@ public:
 
 private:
     // Update thermal headroom each sec.
-    static constexpr auto kThermalHeadroomUpdateThreshold = std::chrono::seconds(1);
+    static std::chrono::seconds kThermalHeadroomUpdateThreshold;
 
     // Function pointer from the game, will be invoked when we receive state changed event from Thermal API
     static thermalStateChangeListener thermalListener;
@@ -165,8 +163,8 @@ private:
     jmethodID update_target_work_duration_;
     jlong preferred_update_rate_;
 
-    cc::events::BeforeTick::Listener beforeTick;
-    cc::events::AfterTick::Listener afterTick;
+    // cc::events::BeforeTick::Listener beforeTick;
+    // cc::events::AfterTick::Listener afterTick;
 
     int64_t frame_time_ns_{0};
 
