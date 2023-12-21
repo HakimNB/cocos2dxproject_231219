@@ -198,7 +198,7 @@ void HelloWorld::update(float f)
         m_iIteration++;
     }
     // CCLOG("HelloWorld update currentValue: %Lf", m_dCurrentValue);
-    CCLOG("HelloWorld update currentValue: %0.15f", m_dCurrentValue);
+    // CCLOG("HelloWorld update currentValue: %0.15f", m_dCurrentValue);
 
     char buffer[100];
     memset(buffer, 0, sizeof(buffer));
