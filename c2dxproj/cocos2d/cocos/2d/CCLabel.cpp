@@ -49,6 +49,8 @@
 #include "renderer/ccShaders.h"
 #include "renderer/backend/ProgramState.h"
 
+#include <android/log.h>
+
 NS_CC_BEGIN
 
 
@@ -253,6 +255,9 @@ Label* Label::createWithSystemFont(const std::string& text, const std::string& f
 
 Label* Label::createWithTTF(const std::string& text, const std::string& fontFile, float fontSize, const Size& dimensions /* = Size::ZERO */, TextHAlignment hAlignment /* = TextHAlignment::LEFT */, TextVAlignment vAlignment /* = TextVAlignment::TOP */)
 {
+    cocos2d::log("CCLabel::createWithTTF log %s", text.c_str());
+    CCLOG("CCLabel::createWithTTF CCLOG %s", text.c_str());
+    __android_log_print(ANDROID_LOG_INFO, "cocos2dx-engine", "CCLabel::createWithTTF __android_log_print %s", text.c_str());
     auto ret = new (std::nothrow) Label(hAlignment,vAlignment);
 
     if (ret && ret->initWithTTF(text, fontFile, fontSize, dimensions, hAlignment, vAlignment))
