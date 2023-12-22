@@ -283,20 +283,24 @@ void ADPFManager::SetThermalListener(thermalStateChangeListener listener) {
 // The methods call performance hint API to tell the performance
 // hint to the system.
 void ADPFManager::BeginPerfHintSession() {
+    // CCLOG("ADPFManager::BeginPerfHintSession threadId: %ld gettid: %d getpid: %ld", std::this_thread::get_id(), gettid(), getpid());
     perf_start_ = std::chrono::steady_clock::now();
 }
 
 void ADPFManager::EndPerfHintSession(jlong target_duration_ns) {
 #if __ANDROID_API__ >= 33
+    CCLOG("ADPFManager::EndPerfHintSession API >= 33 threadId: %ld gettid: %d getpid: %ld", std::this_thread::get_id(), gettid(), getpid());
     auto perf_end = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(perf_end - perf_start_).count();
     int64_t actual_duration_ns = static_cast<int64_t>(dur);
     APerformanceHint_reportActualWorkDuration(hint_session_, actual_duration_ns);
     APerformanceHint_updateTargetWorkDuration(hint_session_, target_duration_ns);
 #else
+    // CCLOG("ADPFManager::EndPerfHintSession threadId: %ld gettid: %d getpid: %ld", std::this_thread::get_id(), gettid(), getpid());
     auto perf_end = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(perf_end - perf_start_).count();
     jlong actual_duration_ns = static_cast<jlong>(dur);
+    // CCLOG("ADPFManager::EndPerfHintSession threadId: %ld gettid: %d getpid: %ld actual_duration_ns: %ld target_duration_ns: %ld", std::this_thread::get_id(), gettid(), getpid(), actual_duration_ns, target_duration_ns);
     if (obj_perfhint_session_) {
         auto *env = cocos2d::JniHelper::getEnv();
 

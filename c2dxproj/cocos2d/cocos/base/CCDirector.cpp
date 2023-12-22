@@ -61,6 +61,10 @@ THE SOFTWARE.
 #include "platform/CCApplication.h"
 #include "renderer/backend/ProgramCache.h"
 
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+#include "platform/android/adpf_manager.h"
+#endif
+
 #if CC_ENABLE_SCRIPT_BINDING
 #include "base/CCScriptSupport.h"
 #endif
@@ -247,6 +251,11 @@ void Director::setGLDefaultValues()
 // Draw the Scene
 void Director::drawScene()
 {
+#if CC_SUPPORT_ADPF
+    // CCLOG("Director::drawScene threadId: %ld gettid: %d getpid: %ld", std::this_thread::get_id(), gettid(), getpid());
+    ADPFManager::getInstance().BeginPerfHintSession();
+#endif
+
     _renderer->beginFrame();
 
     // calculate "global" dt
@@ -331,6 +340,12 @@ void Director::drawScene()
         calculateMPF();
 #endif
     }
+
+#if CC_SUPPORT_ADPF
+    // CCLOG("Director::drawScene threadId: %ld gettid: %d getpid: %ld _animationInterval: %f", std::this_thread::get_id(), gettid(), getpid(), _animationInterval);
+    long targetDuration = _animationInterval * 1000000000LL;
+    ADPFManager::getInstance().EndPerfHintSession(targetDuration);
+#endif
 }
 
 void Director::calculateDeltaTime()
