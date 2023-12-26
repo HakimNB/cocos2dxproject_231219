@@ -398,6 +398,7 @@ void ThreadPool::stop()
 
 void ThreadPool::setThread(int tid)
 {
+    cocos2d::log("ThreadPool::setThread tid %d", tid);
     std::shared_ptr<std::atomic<bool>> abort_ptr(
             _abortFlags[tid]); // a copy of the shared ptr to the flag
     auto f = [this, tid, abort_ptr/* a copy of the shared ptr to the abort */]() {

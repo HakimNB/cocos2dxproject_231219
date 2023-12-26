@@ -27,12 +27,35 @@
 
 #include "cocos2d.h"
 
+#include "gmp/mini-gmp.h"
+
 class HelloWorld : public cocos2d::Scene
 {
+private:
+    int m_iIteration;
+    double m_dCurrentValue;
+
+    std::string m_sCurrentText;
+
+    cocos2d::Label* m_pLabelUpdateTid;
+    cocos2d::Label* m_pLabelInitTid;
+    cocos2d::Label* m_pLabelRenderTid;
+
+    mpz_t m_numCurrentValue;
+    mpz_t m_numDenominator;
+    mpz_t m_numAbsValue;
 public:
     static cocos2d::Scene* createScene();
 
+    virtual ~HelloWorld();
+
     virtual bool init();
+
+    double calculateCurrentFraction(int iteration);
+
+    void update(float f) override;
+
+    virtual void render(cocos2d::Renderer* renderer, const cocos2d::Mat4& eyeTransform, const cocos2d::Mat4* eyeProjection = nullptr) override;
     
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
